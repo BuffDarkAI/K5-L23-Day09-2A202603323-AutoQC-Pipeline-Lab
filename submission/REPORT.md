@@ -58,7 +58,24 @@ Từ `01_intake` (mẫu số 224 ảnh) và `02_error_list_v1` (mẫu số 202 �
 4. **Check thưởng (aspect ratio)** bắt thêm 10 box hình "que" trên 9 ảnh raw (`submission/reports/extra_aspect_ratio.csv`), phần lớn là người bị che một nửa — loại lỗi mà 7 check gốc không nhìn thấy.
 
 ## 5. Train: raw vs clean (tùy chọn, chấm riêng)
-**Chưa chạy.** Cần GPU (Colab T4) và repo public đã push `submission/export/clean_v1/`; phần này sẽ bổ sung sau khi chạy `notebooks/day09_train_compare.ipynb` (yolo26n, 20 epoch, seed 0 và 1 cho `raw` và `clean`). Khi có kết quả sẽ so chênh mAP50 (clean − raw) với độ lệch chuẩn giữa 2 seed và chỉ kết luận "tốt hơn" nếu chênh vượt rõ độ nhiễu.
+Colab T4, `notebooks/day09_train_compare.ipynb`: **yolo26n.pt, 20 epoch, batch 16, imgsz 640, seed 0 và 1** cho cả hai biến thể; cùng val (`gold_val`, 40 ảnh) và cùng test (`data/test`, 100 ảnh). `raw` = 224 ảnh nhãn gốc; `clean` = 202 ảnh của `clean_v1` (bản nháp **Hold**, `manifest_sha1=fb038a4…`). Bảng do `scripts/summarize_results.py` sinh (`submission/results/comparison.md`):
+
+| biến thể | #ảnh train | số seed | map50 (TB ± độ lệch) | map50_95 (TB ± độ lệch) | precision (TB ± độ lệch) | recall (TB ± độ lệch) |
+|---|---|---|---|---|---|---|
+| raw | 224 | 2 | 0.726 ± 0.000 | 0.512 ± 0.004 | 0.764 ± 0.061 | 0.649 ± 0.028 |
+| clean | 202 | 2 | 0.701 ± 0.025 | 0.487 ± 0.008 | 0.759 ± 0.003 | 0.625 ± 0.019 |
+
+Chênh mAP50 (clean − raw) = **−0.025**.
+
+**So với nhiễu.** −0.025 mAP50 đúng bằng **1 độ lệch chuẩn giữa seed của `clean`** (0.718 vs 0.683): seed 0 của clean (0.718) chỉ kém raw 0.008, seed 1 kém 0.043. Precision (−0.005) và recall (−0.024) nằm trong độ lệch (0.061 / 0.028). Riêng mAP50-95 (−0.025) lớn hơn độ lệch seed (0.004–0.008), nhưng độ lệch ước từ **2 seed** là rất kém tin cậy (raw có 2 seed gần trùng nhau 0.7256/0.7259 nên "± 0.000" chắc chắn đánh giá thấp nhiễu thật). Theo lớp, chênh lớn nhất ở **truck**: AP50 clean 0.590/0.486 vs raw 0.657/0.640 — đúng lớp mà test chỉ có **24 box** và hai seed của clean đã lệch nhau 0.10; car hơi thấp hơn (0.740/0.736 vs 0.751/0.724), person ngang (0.816/0.830 vs 0.813/0.832), bus ngang (0.726/0.681 vs 0.681/0.709).
+
+**Giả thuyết và cách kiểm.**
+1. **Rò rỉ test thổi phồng `raw`.** Pipeline đã phát hiện **5 ảnh LEAK_TEST** trong raw (img_0049, img_0101, img_0167, img_0174, img_0221 trùng test_033, 039, 044, 085, 009) — `raw` được train trên chính 5% ảnh test, `clean` thì không. *Kiểm:* đánh giá lại cả hai model trên test **bỏ 5 ảnh đó** (95 ảnh); nếu khoảng cách thu hẹp thì một phần lợi thế của raw là giả.
+2. **`raw` có nhiều ảnh/bước cập nhật hơn.** 224 vs 202 ảnh với cùng 20 epoch → raw có thêm ~11% bước gradient; 12 ảnh trùng (8 trùng byte + 4 gần trùng) còn đóng vai augmentation. Với model nano train ngắn, số bước có thể quan trọng hơn vài chục box sai. *Kiểm:* train `clean` với số epoch quy đổi cùng số iteration (≈ 22 epoch), hoặc train `raw` đã bỏ trùng.
+3. **`clean` chưa thật sự sạch và có thể "sạch khác kiểu" test.** Clean là bản Hold: 38/202 ảnh còn cảnh báo chưa duyệt (20 LOOSE_BOX, 21 FALSE_POS, 13 MISSING trong `07_error_list_v3`). Số box truck tăng 32 → 41 sau người duyệt (car 122 → 101): lớp truck/car được gán lại, model nano với 20 epoch chưa kịp học ranh giới car/truck mới. *Kiểm:* xem AP truck theo seed khi thêm seed, và confusion matrix car↔truck trên test.
+4. **Test nhỏ.** 100 ảnh, chỉ 24 truck và 27 bus: một vài box đổi đúng/sai là AP lớp đó dao động 0.05–0.10. *Kiểm:* bootstrap trên ảnh test để có khoảng tin cậy cho mAP.
+
+**Kết luận trung thực:** với 2 seed, **chưa kết luận được** clean tốt hơn hay kém hơn raw về mAP50: chênh −0.025 nằm trong nhiễu giữa seed của clean. Không có bằng chứng làm sạch giúp tăng mAP ở thí nghiệm này, và điểm của raw nhiều khả năng bị thổi phồng bởi 5 ảnh rò rỉ test. **Việc tiếp theo:** (1) ≥ 5 seed mỗi biến thể; (2) đánh giá trên test bỏ 5 ảnh rò rỉ; (3) duyệt thêm 38 ảnh còn cảnh báo để clean đạt Release, rồi train lại; (4) thêm biến thể `oracle` (nhãn người) làm chặn trên để biết khoảng cách còn lại do nhãn.
 
 ## 6. Quyết định và ghi chú AI
 **(a) Quyết định: HOLD** — không phát hành `clean_v1`. Khớp `08_summary.json`: `n_errors=0`, `n_warn_images=38`, `n_images=202`, `warn_ratio=0.1881 ≥ 0.10`. Điều kiện để thành **Release**: duyệt thêm ít nhất **18** trong 38 ảnh còn cảnh báo (để còn ≤ 20/202 < 10 %), ưu tiên theo thứ tự `05_review_queue.csv` từ ảnh 81 (img_0210) trở đi — tức một vòng duyệt thứ hai, **không** phải nâng `conf` hay sửa ngưỡng gate. Nếu vòng duyệt sau làm phát sinh lỗi bắt buộc mới (vd. người xoá file nhãn), pipeline sẽ Rework và không xuất.
