@@ -1,0 +1,11 @@
+check,severity,code,image,line,message,extra
+aspect_ratio,warn,BOX_ODD_ASPECT,img_0021,5,"box person có h/w=6.79 ngoài khoảng thường gặp [0.4, 6.0]","{""class"": ""person"", ""h_over_w"": 6.794, ""w_px"": 51.4, ""h_px"": 349.0}"
+aspect_ratio,warn,BOX_ODD_ASPECT,img_0042,5,box person tỉ lệ 9.6:1 > 8:1 (25x241px),"{""class"": ""person"", ""h_over_w"": 9.579, ""w_px"": 25.1, ""h_px"": 240.8}"
+aspect_ratio,warn,BOX_ODD_ASPECT,img_0062,1,"box person có h/w=6.59 ngoài khoảng thường gặp [0.4, 6.0]","{""class"": ""person"", ""h_over_w"": 6.589, ""w_px"": 25.9, ""h_px"": 170.8}"
+aspect_ratio,warn,BOX_ODD_ASPECT,img_0068,8,"box person có h/w=7.43 ngoài khoảng thường gặp [0.4, 6.0]","{""class"": ""person"", ""h_over_w"": 7.429, ""w_px"": 29.8, ""h_px"": 221.3}"
+aspect_ratio,warn,BOX_ODD_ASPECT,img_0076,5,box person tỉ lệ 9.2:1 > 8:1 (29x267px),"{""class"": ""person"", ""h_over_w"": 9.233, ""w_px"": 28.9, ""h_px"": 266.7}"
+aspect_ratio,warn,BOX_ODD_ASPECT,img_0084,7,"box person có h/w=6.85 ngoài khoảng thường gặp [0.4, 6.0]","{""class"": ""person"", ""h_over_w"": 6.848, ""w_px"": 26.8, ""h_px"": 183.6}"
+aspect_ratio,warn,BOX_ODD_ASPECT,img_0148,1,"box person có h/w=0.28 ngoài khoảng thường gặp [0.4, 6.0]","{""class"": ""person"", ""h_over_w"": 0.277, ""w_px"": 208.8, ""h_px"": 57.7}"
+aspect_ratio,warn,BOX_ODD_ASPECT,img_0155,2,box person tỉ lệ 9.8:1 > 8:1 (14x133px),"{""class"": ""person"", ""h_over_w"": 9.837, ""w_px"": 13.5, ""h_px"": 133.2}"
+aspect_ratio,warn,BOX_ODD_ASPECT,img_0159,3,"box person có h/w=0.40 ngoài khoảng thường gặp [0.4, 6.0]","{""class"": ""person"", ""h_over_w"": 0.399, ""w_px"": 52.4, ""h_px"": 20.9}"
+aspect_ratio,warn,BOX_ODD_ASPECT,img_0159,4,"box person có h/w=0.22 ngoài khoảng thường gặp [0.4, 6.0]","{""class"": ""person"", ""h_over_w"": 0.223, ""w_px"": 73.7, ""h_px"": 16.5}"
